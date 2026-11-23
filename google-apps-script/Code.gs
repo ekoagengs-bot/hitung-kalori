@@ -26,6 +26,10 @@ function setup() {
     spreadsheetId = ss.getId();
     CONFIG.setProperty('SPREADSHEET_ID', spreadsheetId);
   }
+  const activeSheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('Riwayat');
+  if (!activeSheet) throw new Error('Sheet Riwayat tidak ditemukan.');
+  ensureDeleteTokens_(activeSheet);
+
   Logger.log('Folder foto: https://drive.google.com/drive/folders/' + folderId);
   Logger.log('Riwayat: https://docs.google.com/spreadsheets/d/' + spreadsheetId);
   Logger.log('Gemini API key: ' + (CONFIG.getProperty('GEMINI_API_KEY') ? 'sudah diatur' : 'BELUM diatur'));
@@ -41,7 +45,11 @@ function doPost(e) {
   const nonce = String(p.nonce || '');
   let file = null;
   let rowNumber = 0;
+  let deleteToken = '';
   try {
+    if (p.action === 'deleteRecord') {
+      return deleteRecord_(p.deleteToken, nonce);
+    }
     if (!p.photoData || !p.fileName) throw new Error('Foto atau nama file tidak ditemukan.');
     if (String(p.photoData).length > 5600000) throw new Error('Ukuran foto terlalu besar. Maksimal sekitar 4 MB.');
     const match = String(p.photoData).match(/^data:(image\/(?:jpeg|png|webp));base64,([\s\S]+)$/);
@@ -59,10 +67,13 @@ function doPost(e) {
     sheet.appendRow([new Date(), file.getName(), file.getUrl(), String(p.note || ''),
       'Foto tersimpan - menunggu Gemini', '', '', '', '', '', '']);
     rowNumber = sheet.getLastRow();
+    deleteToken = Utilities.getUuid();
+    sheet.getRange(rowNumber, 12).setValue(deleteToken);
     const analysis = analyzeWithGemini_(base64Data, mimeType, String(p.note || ''));
     writeAnalysisToSheet_(sheet, rowNumber, analysis);
     return responsePage_({
-      ok: true, nonce: nonce, rowNumber: rowNumber, fileName: file.getName(),
+      ok: true, action: 'analyze', nonce: nonce, rowNumber: rowNumber,
+      deleteToken: deleteToken, fileName: file.getName(),
       driveUrl: file.getUrl(), result: analysis,
       message: 'Analisis Gemini selesai. Foto dan hasil nutrisi sudah disimpan.'
     });
@@ -77,11 +88,15 @@ function doPost(e) {
         console.error('Gagal mencatat error ke Sheets: ' + sheetError);
       }
       return responsePage_({
-        ok: false, nonce: nonce, fileName: file.getName(), driveUrl: file.getUrl(),
+        ok: false, action: 'analyze', nonce: nonce, rowNumber: rowNumber,
+        deleteToken: deleteToken, fileName: file.getName(), driveUrl: file.getUrl(),
         message: 'Foto berhasil disimpan, tetapi analisis Gemini gagal: ' + friendlyError_(err)
       });
     }
-    return responsePage_({ ok: false, nonce: nonce, message: friendlyError_(err) });
+    return responsePage_({
+      ok: false, action: p.action || 'analyze', nonce: nonce,
+      message: friendlyError_(err)
+    });
   }
 }
 
@@ -186,6 +201,80 @@ function writeAnalysisToSheet_(sheet, rowNumber, result) {
     status, total.calories_kcal || 0, total.protein_g || 0, total.carbs_g || 0,
     total.fat_g || 0, total.fiber_g || 0, notes.slice(0, 2000)
   ]]);
+}
+
+
+/**
+ * Tambahkan token hapus yang sulit ditebak untuk setiap baris.
+ * Kolom L disembunyikan dari tampilan spreadsheet.
+ */
+function ensureDeleteTokens_(sheet) {
+  if (sheet.getMaxColumns() < 12) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), 12 - sheet.getMaxColumns());
+  }
+  sheet.getRange(1, 12).setValue('Token hapus');
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    const range = sheet.getRange(2, 12, lastRow - 1, 1);
+    const tokens = range.getValues();
+    let changed = false;
+    for (let i = 0; i < tokens.length; i++) {
+      if (!tokens[i][0]) {
+        tokens[i][0] = Utilities.getUuid();
+        changed = true;
+      }
+    }
+    if (changed) range.setValues(tokens);
+  }
+  sheet.hideColumns(12);
+}
+
+/**
+ * Hapus satu record berdasarkan token rahasia, bukan nomor baris saja.
+ * File Drive dipindahkan ke Sampah, lalu baris Sheets dihapus.
+ */
+function deleteRecord_(token, nonce) {
+  const deleteToken = String(token || '').trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deleteToken)) {
+    throw new Error('Kode penghapusan tidak valid. Muat ulang hasil atau analisis foto kembali.');
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const spreadsheetId = CONFIG.getProperty('SPREADSHEET_ID');
+    if (!spreadsheetId) throw new Error('Spreadsheet belum dikonfigurasi.');
+    const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('Riwayat');
+    if (!sheet) throw new Error('Sheet Riwayat tidak ditemukan.');
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) throw new Error('Riwayat foto tidak ditemukan atau sudah dihapus.');
+
+    const tokenValues = sheet.getRange(2, 12, lastRow - 1, 1).getValues();
+    let matchingRow = -1;
+    for (let i = 0; i < tokenValues.length; i++) {
+      if (String(tokenValues[i][0]) === deleteToken) {
+        matchingRow = i + 2;
+        break;
+      }
+    }
+    if (matchingRow < 2) throw new Error('Foto atau hasil ini sudah dihapus, atau kode penghapusannya tidak cocok.');
+
+    const driveUrl = String(sheet.getRange(matchingRow, 3).getValue() || '');
+    const match = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      DriveApp.getFileById(match[1]).setTrashed(true);
+    }
+    sheet.deleteRow(matchingRow);
+
+    return responsePage_({
+      ok: true, action: 'deleteRecord', nonce: nonce,
+      deleteToken: deleteToken,
+      message: 'Foto dipindahkan ke Sampah Google Drive dan catatannya dihapus dari Google Sheets.'
+    });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function sanitizeFileName(name) {
