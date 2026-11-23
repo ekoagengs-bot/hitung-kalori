@@ -52,6 +52,6 @@ function safeName(name) {
 
 function page(data) {
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
-  return HtmlService.createHtmlOutput('<!doctype html><meta charset="utf-8><script>parent.postMessage('+json+', "*");</script><p>Permintaan selesai. Anda dapat menutup tab ini.</p>')
+  return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"></head><body><script>parent.postMessage(Object.assign({type:"hka-upload-result"}, '+json+'), "*");</script><p>Permintaan selesai. Anda dapat menutup tab ini.</p></body></html>')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
