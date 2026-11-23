@@ -22,6 +22,14 @@ Kalori Pro adalah Progressive Web App (PWA) yang dipublikasikan melalui GitHub P
 ## Perbarui Apps Script
 Jika Anda sudah menjalankan versi Gemini sebelumnya dan hanya memperbarui UI, Apps Script yang lama tetap bisa digunakan. Jika ingin memakai versi Code.gs terbaru, salin file `google-apps-script/Code.gs` ke Apps Script, simpan, lalu Deploy > Manage deployments > Edit > New version > Deploy. Jangan jalankan `doPost` langsung dari tombol Run.
 
+## Hapus foto dan hasil analisis
+- Versi terbaru menyediakan tombol **Hapus foto & hasil** pada hasil analisis dan tombol **Hapus** untuk riwayat baru di perangkat.
+- Penghapusan memindahkan foto ke Sampah Google Drive dan menghapus baris terkait dari tab Riwayat di Google Sheets.
+- Setiap unggahan memiliki token UUID rahasia di kolom L (disembunyikan) agar penghapusan tidak hanya bergantung pada nomor baris.
+- Setelah mengganti `Code.gs`, jalankan fungsi `setup` satu kali untuk menambahkan kolom token dan memberi token pada baris lama. Kemudian deploy ulang sebagai **New version**.
+- Riwayat lokal yang dibuat sebelum fitur ini belum memiliki token penghapusan; foto lama tersebut perlu dihapus manual dari Google Drive dan barisnya dari Google Sheets.
+- File yang masuk Sampah masih dapat dipulihkan sebelum dihapus permanen.
+
 ## Konfigurasi website
 1. Buka website Kalori Pro.
 2. Buka Pengaturan koneksi di kartu Analisis makanan.
