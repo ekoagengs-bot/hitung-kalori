@@ -212,7 +212,9 @@ function friendlyError_(err) {
 function responsePage_(data) {
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
   const html = '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
-    '<script>parent.postMessage(Object.assign({type:"hka-gemini-result"}, ' + json + '), "*");</script>' +
-    '<p>Proses selesai. Anda dapat kembali ke tab aplikasi.</p></body></html>';
+    '<script>(function(){var message=Object.assign({type:"hka-gemini-result"}, ' + json + ');' +
+    'try { window.top.postMessage(message, "*"); } catch(e) {}' +
+    'try { window.parent.postMessage(message, "*"); } catch(e) {}' +
+    '})();</script><p>Proses selesai. Anda dapat kembali ke tab aplikasi.</p></body></html>';
   return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
