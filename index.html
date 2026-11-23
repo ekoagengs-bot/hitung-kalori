@@ -1,30 +1,109 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#176b4b"><title>Hitung Kalori AI</title>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#176b4b"><title>Hitung Kalori AI</title>
 <style>
-:root{font-family:Arial, sans-serif;color:#193328;background:#f3f7f3}*{box-sizing:border-box}body{margin:0}.wrap{max-width:850px;margin:auto;padding:25px 16px 50px}header{display:flex;align-items:center;gap:12px;margin-bottom:22px}.logo{background:#176b4b;color:white;border-radius:13px;padding:12px;font-size:24px}h1{font-size:26px;margin:0}header p{color:#63766a;margin:4px 0}.hero{background:linear-gradient(120deg,#145b40,#23845e);color:#fff;padding:27px;border-radius:22px;margin-bottom:18px}.hero h2{margin:0 0 8px}.hero p{line-height:1.55;margin:0;color:#e2f3e8}.card{background:white;border:1px solid #e0e9e1;border-radius:18px;padding:21px;margin:15px 0;box-shadow:0 7px 25px #1933280c}label{font-weight:700;display:block;margin:14px 0 8px}.muted,.help{font-size:13px;color:#65776b;line-height:1.5}.drop{border:2px dashed #b8cfbf;background:#f8fbf8;border-radius:15px;text-align:center;padding:24px;cursor:pointer}.drop input{display:none}.preview{display:none;max-width:100%;max-height:280px;margin:14px auto 0;border-radius:12px}input[type=url],input[type=text],textarea{width:100%;border:1px solid #d5e1d7;border-radius:10px;padding:12px;font:inherit}textarea{min-height:64px}button,.linkbtn{display:block;width:100%;border:0;border-radius:11px;padding:14px;background:#176b4b;color:white;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;margin-top:12px;font-size:15px}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e9f3ec;color:#19583e}.status{background:#eff5f0;padding:12px;border-radius:11px;margin-top:12px;font-size:14px;line-height:1.5}.result{display:none}.step{display:flex;gap:12px;margin:12px 0;align-items:flex-start}.num{background:#e6f2e9;color:#176b4b;border-radius:50%;width:27px;height:27px;display:grid;place-items:center;flex:none;font-weight:bold}.foot{text-align:center;color:#748278;font-size:12px;margin-top:24px}@media(max-width:600px){.card{padding:16px}.hero{padding:22px}}
+:root{font-family:Arial,system-ui,sans-serif;color:#193328;background:#f3f7f3}*{box-sizing:border-box}body{margin:0}.wrap{max-width:880px;margin:auto;padding:25px 16px 50px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:22px}.logo{background:#176b4b;color:#fff;border-radius:13px;padding:12px;font-size:24px}
+h1{font-size:26px;margin:0}header p{color:#63766a;margin:4px 0}.hero{background:linear-gradient(120deg,#145b40,#23845e);color:#fff;padding:27px;border-radius:22px;margin-bottom:18px}.hero h2{margin:0 0 8px}.hero p{line-height:1.55;margin:0;color:#e2f3e8}
+.card{background:white;border:1px solid #e0e9e1;border-radius:18px;padding:21px;margin:15px 0;box-shadow:0 7px 25px #1933280c}
+label{font-weight:700;display:block;margin:14px 0 8px}.muted,.help{font-size:13px;color:#65776b;line-height:1.5}
+.drop{border:2px dashed #b8cfbf;background:#f8fbf8;border-radius:15px;text-align:center;padding:24px;cursor:pointer}.drop input{display:none}
+.preview{display:none;max-width:100%;max-height:280px;margin:14px auto 0;border-radius:12px}
+input[type=url],input[type=text],input[type=number],textarea{width:100%;border:1px solid #d5e1d7;border-radius:10px;padding:12px;font:inherit}textarea{min-height:64px}
+button,.linkbtn{display:block;width:100%;border:0;border-radius:11px;padding:14px;background:#176b4b;color:white;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;margin-top:12px;font-size:15px}
+button:disabled{opacity:.5;cursor:wait}.secondary{background:#e9f3ec;color:#19583e}.status{background:#eff5f0;padding:12px;border-radius:11px;margin-top:12px;font-size:14px;line-height:1.5}
+.result{display:none}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.step{background:#f5f9f5;padding:13px;border-radius:12px;font-size:13px;line-height:1.5}.step b{display:block;margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.foot{text-align:center;color:#748278;font-size:12px;margin-top:24px}
+@media(max-width:600px){.card{padding:16px}.hero{padding:22px}.steps{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
 </style></head><body><main class="wrap">
 <header><div class="logo">🥗</div><div><h1>Hitung Kalori AI</h1><p>Foto makanan, simpan, lalu analisis dengan ChatGPT.</p></div></header>
-<section class="hero"><h2>Hitung kalori tanpa biaya API</h2><p>Website menyimpan foto ke Google Drive dan mencatat riwayat di Google Sheets. Analisis makanan dilakukan manual melalui ChatGPT, tanpa OpenAI API.</p></section>
+<section class="hero"><h2>Hitung kalori tanpa API berbayar</h2><p>Foto disimpan ke Google Drive dan dicatat di Google Sheets. Analisis dilakukan langsung di ChatGPT secara manual menggunakan akun ChatGPT Anda.</p></section>
 <section class="card">
-<label>1. Hubungkan Google Apps Script</label><input id="endpoint" type="url" placeholder="Tempel URL Web App Google Apps Script (akhiran /exec)">
-<p class="help">URL ini didapat setelah Anda menerbitkan Apps Script sebagai Web App. Disimpan hanya di browser ini.</p>
-<label>2. Pilih foto makanan/minuman</label><label class="drop" for="photo"><div style="font-size:32px">📷</div><b>Tekan untuk memilih foto</b><div class="muted">JPG, PNG, WEBP · Maksimal 4 MB</div><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
+<h3 style="margin-top:0">1. Hubungkan Google Apps Script</h3>
+<label for="endpoint">URL Web App Google Apps Script</label>
+<input id="endpoint" type="url" placeholder="Tempel URL yang berakhiran /exec">
+<p class="help">URL diberikan setelah Anda menerbitkan Apps Script sebagai Web App. URL ini disimpan di browser ini. Jangan sebarkan URL Web App kepada orang lain.</p>
+<label>2. Pilih foto makanan/minuman</label>
+<label class="drop" for="photo"><div style="font-size:32px">📷</div><b>Tekan untuk memilih foto</b><div class="muted">JPG, PNG, WEBP · Maksimal 4 MB</div><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
 <img id="preview" class="preview" alt="Pratinjau foto">
 <label for="note">Catatan makanan (opsional)</label><textarea id="note" placeholder="Contoh: nasi satu centong, ayam goreng satu potong, es teh manis..."></textarea>
 <button id="save" disabled>Simpan foto ke Google Drive</button><div class="status" id="status">Masukkan URL Apps Script dan pilih foto.</div>
 </section>
-<section class="card result" id="result"><h3 style="margin-top:0">Foto berhasil disimpan</h3><p id="savedName" class="help"></p><a id="driveLink" class="linkbtn secondary" target="_blank" rel="noopener">Buka foto di Google Drive</a><button id="chatgpt">Buka ChatGPT untuk analisis foto</button><p class="help">Di ChatGPT, lampirkan foto yang sama dari perangkat Anda. Salin prompt analisis yang disiapkan aplikasi. Setelah mendapat hasil, Anda dapat mencatat angkanya di Google Sheets.</p><button id="copyPrompt" class="secondary">Salin prompt analisis</button></section>
-<section class="card"><h3 style="margin-top:0">Cara kerja aplikasi</h3><div class="step"><span class="num">1</span><div>Foto disimpan ke folder Google Drive pribadi Anda.</div></div><div class="step"><span class="num">2</span><div>Data unggahan dan tautan foto dicatat di Google Sheets.</div></div><div class="step"><span class="num">3</span><div>Buka ChatGPT, lampirkan foto, lalu minta estimasi kalori dan nutrisi.</div></div><div class="step"><span class="num">4</span><div>Gunakan hasil ChatGPT untuk mengisi catatan nutrisi pada Google Sheets.</div></div></section>
-<p class="foot">Estimasi visual bukan pengukuran laboratorium. Foto dan riwayat tersimpan di akun Google Anda.</p></main>
-<iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
+<section class="card result" id="result">
+<h3 style="margin-top:0">Foto berhasil disimpan</h3><p id="savedName" class="help"></p>
+<a id="driveLink" class="linkbtn secondary" target="_blank" rel="noopener">Buka foto di Google Drive</a>
+<button id="chatgpt">Buka ChatGPT untuk analisis foto</button>
+<p class="help">Di ChatGPT, lampirkan foto asli dari perangkat Anda (bukan hanya tautan Drive), lalu tempel prompt analisis. Setelah mendapat hasil, masukkan angka nutrisi pada formulir di bawah ini.</p>
+<button id="copyPrompt" class="secondary">Salin prompt analisis</button>
+</section>
+<section class="card result" id="nutrition">
+<h3 style="margin-top:0">Simpan hasil analisis ke Google Sheets</h3>
+<p class="help">Isi angka total dari jawaban ChatGPT. Masukkan angka saja, tanpa satuan.</p>
+<div class="grid">
+<div><label for="calories">Kalori (kkal)</label><input type="number" min="0" step="0.1" id="calories" placeholder="Contoh: 650"></div>
+<div><label for="protein">Protein (gram)</label><input type="number" min="0" step="0.1" id="protein" placeholder="Contoh: 32"></div>
+<div><label for="carbs">Karbohidrat (gram)</label><input type="number" min="0" step="0.1" id="carbs" placeholder="Contoh: 75"></div>
+<div><label for="fat">Lemak (gram)</label><input type="number" min="0" step="0.1" id="fat" placeholder="Contoh: 22"></div>
+<div><label for="fiber">Serat (gram)</label><input type="number" min="0" step="0.1" id="fiber" placeholder="Contoh: 6"></div>
+</div>
+<label for="resultNotes">Catatan / asumsi ChatGPT</label><textarea id="resultNotes" placeholder="Contoh: porsi nasi 150 gram; ayam digoreng; minyak diperkirakan..."></textarea>
+<button id="saveResult">Simpan hasil nutrisi ke Google Sheets</button>
+</section>
+<section class="card"><h3 style="margin-top:0">Alur penggunaan</h3><div class="steps">
+<div class="step"><b>1. Unggah foto</b>Foto disimpan ke folder Google Drive pribadi.</div>
+<div class="step"><b>2. Analisis ChatGPT</b>Buka ChatGPT, lampirkan foto asli, dan tempel prompt.</div>
+<div class="step"><b>3. Catat hasil</b>Masukkan total kalori dan nutrisi ke formulir agar tersimpan di Google Sheets.</div>
+</div></section>
+<p class="foot">Estimasi visual bukan pengukuran laboratorium. Foto dan riwayat tersimpan di akun Google Anda.</p>
+</main><iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
 <script>
-const $=id=>document.getElementById(id);let file=null,lastPrompt='';
-const endpoint=$('endpoint');endpoint.value=localStorage.getItem('hka_gas_url')||'';
+const $=id=>document.getElementById(id);
+const endpoint=$('endpoint');let file=null,lastPrompt='',activeRow=null,pendingNonce=null;
+endpoint.value=localStorage.getItem('hka_gas_url')||'';
 endpoint.addEventListener('change',()=>localStorage.setItem('hka_gas_url',endpoint.value.trim()));
-$('photo').addEventListener('change',()=>{file=$('photo').files[0]||null;$('result').style.display='none';if(!file){$('save').disabled=true;$('preview').style.display='none';return}if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){file=null;$('save').disabled=true;$('status').textContent='Format tidak didukung atau ukuran melebihi 4 MB.';$('preview').style.display='none';return}$('preview').src=URL.createObjectURL(file);$('preview').style.display='block';$('save').disabled=!endpoint.value.trim();$('status').textContent='Foto siap disimpan.'});
-endpoint.addEventListener('input',()=>{$('save').disabled=!(file&&endpoint.value.trim())});
-window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.type!=='hka-upload-result')return;$('save').disabled=false;$('save').textContent='Simpan foto ke Google Drive';$('status').textContent=d.message;if(!d.ok)return;$('result').style.display='block';$('savedName').textContent=d.fileName;$('driveLink').href=d.url;lastPrompt='Tolong analisis foto makanan/minuman yang saya lampirkan. Identifikasi setiap makanan, perkirakan berat atau ukuran porsinya, lalu hitung estimasi kalori (kkal), protein, karbohidrat, lemak, dan serat. Sajikan tabel per makanan dan total keseluruhan. Jelaskan asumsi, kemungkinan minyak/gula/santan/saus tersembunyi, tingkat keyakinan, dan rentang ketidakpastian. Jangan menganggap angka sebagai hasil pengukuran pasti. Catatan saya: '+$('note').value;});
-$('save').addEventListener('click',()=>{if(!file||!endpoint.value.trim())return;$('save').disabled=true;$('save').textContent='Mengunggah…';$('status').textContent='Sedang menyimpan foto ke Google Drive dan mencatatnya di Sheets.';const reader=new FileReader();reader.onload=()=>{const form=document.createElement('form');form.method='POST';form.action=endpoint.value.trim();form.target='uploadFrame';form.style.display='none';const values={photoData:reader.result,fileName:file.name,note:$('note').value,nonce:String(Date.now())};Object.entries(values).forEach(([k,v])=>{const input=document.createElement('textarea');input.name=k;input.value=v;form.appendChild(input)});document.body.appendChild(form);form.submit();form.remove();};reader.onerror=()=>{$('status').textContent='Gagal membaca foto dari perangkat.';$('save').disabled=false};reader.readAsDataURL(file)});
-$('chatgpt').addEventListener('click',()=>{if(lastPrompt){navigator.clipboard?.writeText(lastPrompt).catch(()=>{});}window.open('https://chatgpt.com/','_blank','noopener')});
-$('copyPrompt').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(lastPrompt);$('status').textContent='Prompt analisis berhasil disalin. Tempelkan di ChatGPT.'}catch(e){prompt('Salin prompt berikut:',lastPrompt)}});
+function validEndpoint(){return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(endpoint.value.trim());}
+$('photo').addEventListener('change',()=>{
+ file=$('photo').files[0]||null;$('result').style.display='none';$('nutrition').style.display='none';
+ if(!file){$('save').disabled=true;$('preview').style.display='none';return;}
+ if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){file=null;$('save').disabled=true;$('status').textContent='Format tidak didukung atau ukuran melebihi 4 MB.';$('preview').style.display='none';return;}
+ $('preview').src=URL.createObjectURL(file);$('preview').style.display='block';$('save').disabled=!(validEndpoint());$('status').textContent='Foto siap disimpan.';
+});
+endpoint.addEventListener('input',()=>{$('save').disabled=!(file&&validEndpoint());});
+function sendToAppsScript(values){
+ pendingNonce=String(Date.now())+String(Math.floor(Math.random()*100000));
+ values.nonce=pendingNonce;
+ const form=document.createElement('form');form.method='POST';form.action=endpoint.value.trim();form.target='uploadFrame';form.style.display='none';
+ Object.entries(values).forEach(([key,value])=>{const input=document.createElement('textarea');input.name=key;input.value=String(value??'');form.appendChild(input);});
+ document.body.appendChild(form);form.submit();form.remove();
+}
+window.addEventListener('message',event=>{
+ const d=event.data;if(!d||d.type!=='hka-upload-result'||String(d.nonce)!==String(pendingNonce))return;
+ if(d.action==='upload'){
+  $('save').disabled=false;$('save').textContent='Simpan foto ke Google Drive';$('status').textContent=d.message;
+  if(!d.ok)return;
+  activeRow=d.rowNumber;$('result').style.display='block';$('nutrition').style.display='block';$('savedName').textContent=d.fileName;$('driveLink').href=d.url;
+  lastPrompt='Tolong analisis foto makanan/minuman yang saya lampirkan. Identifikasi setiap makanan, perkirakan berat atau ukuran porsinya, lalu hitung estimasi kalori (kkal), protein, karbohidrat, lemak, dan serat. Sajikan tabel per makanan dan total keseluruhan. Jelaskan asumsi, kemungkinan minyak/gula/santan/saus tersembunyi, tingkat keyakinan, dan rentang ketidakpastian. Jangan menganggap angka sebagai hasil pengukuran pasti. Catatan saya: '+$('note').value;
+ }else if(d.action==='saveResult'){
+  $('saveResult').disabled=false;$('saveResult').textContent='Simpan hasil nutrisi ke Google Sheets';$('status').textContent=d.message;
+ }
+});
+$('save').addEventListener('click',()=>{
+ if(!file||!validEndpoint()){$('status').textContent='Periksa URL Apps Script dan pilih foto terlebih dahulu.';return;}
+ $('save').disabled=true;$('save').textContent='Mengunggah…';$('status').textContent='Sedang menyimpan foto ke Google Drive dan mencatatnya di Sheets.';
+ const reader=new FileReader();reader.onload=()=>sendToAppsScript({action:'upload',photoData:reader.result,fileName:file.name,note:$('note').value});
+ reader.onerror=()=>{$('status').textContent='Gagal membaca foto dari perangkat.';$('save').disabled=false;$('save').textContent='Simpan foto ke Google Drive';};reader.readAsDataURL(file);
+});
+$('chatgpt').addEventListener('click',()=>{window.open('https://chatgpt.com/','_blank','noopener');});
+$('copyPrompt').addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(lastPrompt);$('status').textContent='Prompt berhasil disalin. Buka ChatGPT, lampirkan foto asli, lalu tempel prompt.';}
+ catch(e){window.prompt('Salin prompt berikut:',lastPrompt);}
+});
+$('saveResult').addEventListener('click',()=>{
+ if(!activeRow||!validEndpoint()){$('status').textContent='Belum ada foto yang berhasil disimpan.';return;}
+ const ids=['calories','protein','carbs','fat','fiber'];
+ for(const id of ids){const el=$(id);if(el.value===''||!Number.isFinite(Number(el.value))||Number(el.value)<0){el.focus();$('status').textContent='Lengkapi semua angka nutrisi dengan angka nol atau lebih.';return;}}
+ $('saveResult').disabled=true;$('saveResult').textContent='Menyimpan hasil…';
+ sendToAppsScript({action:'saveResult',rowNumber:activeRow,calories:$('calories').value,protein:$('protein').value,carbs:$('carbs').value,fat:$('fat').value,fiber:$('fiber').value,resultNotes:$('resultNotes').value});
+});
 </script></body></html>
