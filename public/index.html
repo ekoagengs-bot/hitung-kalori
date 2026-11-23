@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102a22"><title>Hitung Kalori AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#142b23;--muted:#718078;--green:#1d7654;--mint:#eaf5ee;--line:#e4ebe6;--bg:#f5f8f5}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif}
+    header{background:#102a22;color:#fff;padding:20px max(22px,calc((100vw - 1040px)/2));display:flex;align-items:center;justify-content:space-between}
+    .brand{font:800 18px Manrope,sans-serif;letter-spacing:-.4px}.brand span{color:#9fe0b7}
+    .pill{font-size:12px;color:#d4f5df;border:1px solid #47715d;border-radius:99px;padding:7px 11px}
+    main{max-width:1040px;margin:36px auto;padding:0 20px}.hero{margin-bottom:24px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:1.7px;color:var(--green);font-weight:700}
+    h1{font:800 clamp(28px,5vw,42px) Manrope;margin:10px 0}.hero p{color:var(--muted);max-width:660px;line-height:1.65;margin:0}
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 8px 28px #173d2710}
+    .drop{min-height:250px;border:2px dashed #c8d9ce;background:#fbfdfb;border-radius:16px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;cursor:pointer;overflow:hidden}
+    .drop img{max-height:260px;max-width:100%;border-radius:12px}.upload-icon{font-size:36px}.drop strong{display:block;margin:10px 0 5px}.hint{font-size:13px;color:var(--muted)}
+    input[type=file]{display:none}label{font-weight:700;font-size:13px;display:block;margin:18px 0 8px}.context{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:14px inherit;min-height:70px;resize:vertical}
+    button{width:100%;border:0;border-radius:12px;background:var(--green);color:white;font-weight:700;padding:14px;margin-top:16px;font-size:15px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+    .whatsapp{display:flex;align-items:center;gap:12px;background:var(--mint);border-radius:14px;padding:14px;margin-top:16px;font-size:13px;line-height:1.5}.wa-icon{font-size:27px}
+    .result-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.result-head h2{font:700 18px Manrope;margin:0}.tag{background:#f0f4f1;padding:6px 9px;border-radius:30px;font-size:11px;color:#52665a}
+    .empty{min-height:330px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);line-height:1.6}.empty span{font-size:40px;display:block}
+    .calories{background:#f0f7f1;border-radius:16px;padding:18px;margin-bottom:14px}.calories small{color:var(--muted);font-weight:600}.number{font:800 38px Manrope;color:var(--green);margin:5px 0}.number em{font:500 14px "DM Sans";color:var(--muted);font-style:normal}
+    .macros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.macro{padding:12px 8px;background:#fafcfb;border:1px solid var(--line);border-radius:12px;text-align:center}.macro b{display:block;font:700 18px Manrope}.macro small{font-size:11px;color:var(--muted)}
+    .food-item{padding:13px 0;border-bottom:1px solid var(--line)}.food-item:last-child{border:0}.food-item b{display:block}.food-item small{color:var(--muted);line-height:1.5}.notes{font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px}.status{font-size:13px;color:var(--green);margin-top:12px;min-height:20px}
+    footer{max-width:1040px;margin:18px auto 36px;padding:0 20px;color:#89968e;font-size:12px}
+    @media(max-width:760px){main{margin-top:24px}.layout{grid-template-columns:1fr}.panel{padding:17px}.macros{grid-template-columns:repeat(2,1fr)}header{padding:17px 20px}}
+  </style>
+</head>
+<body>
+<header><div class="brand">🥑 HITUNG <span>KALORI AI</span></div><div class="pill">AI NUTRITION ASSISTANT</div></header>
+<main>
+  <section class="hero"><div class="eyebrow">Kenali asupanmu</div><h1>Foto makanan. Ketahui kalorinya.</h1><p>Unggah foto makanan atau minuman. AI akan mengenali hidangan, memperkirakan porsinya, lalu menghitung kalori dan makronutrien.</p></section>
+  <section class="layout">
+    <div class="panel">
+      <div class="eyebrow">01 / Unggah foto</div>
+      <input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
+      <label class="drop" for="photo" id="drop"><div><div class="upload-icon">📷</div><strong>Pilih foto makanan atau minuman</strong><div class="hint">JPG, PNG, WEBP · Maksimal 8 MB</div></div></label>
+      <label for="context">Catatan tambahan (opsional)</label><textarea class="context" id="context" placeholder="Contoh: nasi sekitar 1 centong, ayam digoreng, es teh manis..."></textarea>
+      <button id="analyze">Analisis kandungan gizi</button><div class="status" id="status"></div>
+      <div class="whatsapp"><div class="wa-icon">💬</div><div><b>Lewat WhatsApp juga bisa</b><br>Setelah nomor WhatsApp Business dihubungkan, cukup kirim foto ke nomor bot untuk mendapat hasil otomatis.</div></div>
+    </div>
+    <div class="panel">
+      <div class="result-head"><h2>Hasil analisis</h2><span class="tag">ESTIMASI AI</span></div>
+      <div id="result" class="empty"><div><span>🍱</span>Hasil analisis makananmu<br>akan tampil di sini.</div></div>
+    </div>
+  </section>
+</main>
+<footer>Estimasi visual dapat berbeda dari nilai sebenarnya. Berat porsi, minyak, gula, santan dan saus yang tidak terlihat memengaruhi hasil.</footer>
+<script>
+const fileInput=document.getElementById('photo'),drop=document.getElementById('drop'),button=document.getElementById('analyze');
+let selected=null;
+fileInput.addEventListener('change',()=>{selected=fileInput.files[0]||null;if(!selected)return;const url=URL.createObjectURL(selected);drop.innerHTML='<img alt="Pratinjau foto makanan" src="'+url+'">';});
+button.addEventListener('click',async()=>{
+ const status=document.getElementById('status'),result=document.getElementById('result');
+ if(!selected){status.textContent='Pilih foto terlebih dahulu.';return;}
+ button.disabled=true;button.textContent='Sedang menganalisis...';status.textContent='AI sedang mengenali makanan dan memperkirakan porsinya.';
+ try{
+  const fd=new FormData();fd.append('photo',selected);fd.append('context',document.getElementById('context').value);
+  const response=await fetch('/api/analyze',{method:'POST',body:fd});const data=await response.json();if(!response.ok)throw new Error(data.error||'Analisis gagal');
+  if(!data.is_food){result.innerHTML='<div class="empty"><div><span>🤔</span>'+esc((data.notes||['Foto belum dapat dikenali sebagai makanan.']).join(' '))+'</div></div>';status.textContent='Coba gunakan foto yang lebih jelas.';return;}
+  const t=data.total||{};let html='<div class="calories"><small>PERKIRAAN TOTAL KALORI</small><div class="number">'+Math.round(t.calories_kcal||0)+' <em>kkal</em></div></div><div class="macros">'+[['Protein',t.protein_g],['Karbohidrat',t.carbs_g],['Lemak',t.fat_g],['Serat',t.fiber_g]].map(([n,v])=>'<div class="macro"><b>'+num(v)+' g</b><small>'+n+'</small></div>').join('')+'</div><h3 style="font:700 15px Manrope;margin:22px 0 8px">Rincian makanan</h3>';
+  html+=(data.items||[]).map(it=>'<div class="food-item"><b>'+esc(it.name)+' · '+esc(it.portion)+'</b><small>'+Math.round(it.calories_kcal||0)+' kkal | P '+num(it.protein_g)+'g · K '+num(it.carbs_g)+'g · L '+num(it.fat_g)+'g · Serat '+num(it.fiber_g)+'g<br>'+esc(it.assumption||'')+'</small></div>').join('');
+  html+='<div class="notes">Tingkat keyakinan: <b>'+esc(data.confidence||'sedang')+'</b><br>'+(data.notes||[]).map(esc).join('<br>')+(data.follow_up_question?'<br><br>❓ '+esc(data.follow_up_question):'')+'</div>';
+  result.className='';result.innerHTML=html;status.textContent='Analisis selesai.';
+ }catch(e){status.textContent=e.message; }finally{button.disabled=false;button.textContent='Analisis kandungan gizi';}
+});
+function num(v){return Number(v||0).toFixed(1).replace(/\.0$/,'');}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body></html>
