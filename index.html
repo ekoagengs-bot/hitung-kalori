@@ -410,9 +410,12 @@ function saveLocalEntry(result, fileName) {
   localStorage.setItem('hka_pro_log', JSON.stringify(log.slice(0, 80)));
   refreshDashboard();
 }
+function localDateKey(date) {
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
 function refreshDashboard() {
-  const today = new Date().toLocaleDateString('en-CA');
-  const todayEntries = readLocalLog().filter(entry => new Date(entry.date).toLocaleDateString('en-CA') === today);
+  const today = localDateKey(new Date());
+  const todayEntries = readLocalLog().filter(entry => localDateKey(new Date(entry.date)) === today);
   const totals = todayEntries.reduce((sum, entry) => {
     const t = entry.total || {};
     sum.calories += Number(t.calories_kcal || 0);
