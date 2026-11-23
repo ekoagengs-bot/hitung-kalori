@@ -1,46 +1,485 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#176b4b"><title>Hitung Kalori AI</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10271f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kalori Pro">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Asisten nutrisi berbasis Google Gemini untuk memperkirakan kalori dan nutrisi dari foto makanan.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon.svg">
+<title>Kalori Pro — Hitung Kalori AI</title>
 <style>
-:root{font-family:Inter,Arial,system-ui,sans-serif;color:#193328;background:#f3f7f3}*{box-sizing:border-box}body{margin:0}.wrap{max-width:920px;margin:auto;padding:25px 16px 50px}
-header{display:flex;align-items:center;gap:12px;margin-bottom:22px}.logo{background:#176b4b;color:white;border-radius:13px;padding:12px;font-size:24px}h1{font-size:26px;margin:0}header p{color:#63766a;margin:4px 0}
-.hero{background:linear-gradient(120deg,#145b40,#23845e);color:white;padding:27px;border-radius:22px;margin-bottom:18px}.hero h2{margin:0 0 8px}.hero p{line-height:1.55;margin:0;color:#e2f3e8}
-.card{background:white;border:1px solid #e0e9e1;border-radius:18px;padding:21px;margin:15px 0;box-shadow:0 7px 25px #1933280c}label{font-weight:700;display:block;margin:14px 0 8px}.muted,.help{font-size:13px;color:#65776b;line-height:1.5}
-.drop{border:2px dashed #b8cfbf;background:#f8fbf8;border-radius:15px;text-align:center;padding:24px;cursor:pointer}.drop input{display:none}.preview{display:none;max-width:100%;max-height:300px;margin:14px auto 0;border-radius:12px}
-input[type=url],textarea{width:100%;border:1px solid #d5e1d7;border-radius:10px;padding:12px;font:inherit}textarea{min-height:64px}button,.linkbtn{display:block;width:100%;border:0;border-radius:11px;padding:14px;background:#176b4b;color:white;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;margin-top:12px;font-size:15px}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e9f3ec;color:#19583e}.status{background:#eff5f0;padding:12px;border-radius:11px;margin-top:12px;font-size:14px;line-height:1.5}
-.result{display:none}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:15px 0}.metric{background:#f1f7f2;border-radius:12px;padding:13px 8px;text-align:center}.metric b{display:block;font-size:21px;color:#176b4b}.metric span{font-size:12px;color:#607268}.food{padding:12px 0;border-bottom:1px solid #edf2ed}.food:last-child{border-bottom:0}.foodhead{display:flex;justify-content:space-between;gap:12px}.food small{color:#68786e;line-height:1.6}.confidence{display:inline-block;border-radius:20px;background:#e9f3ec;color:#19583e;padding:5px 9px;font-size:12px}.notes{font-size:13px;color:#607268;line-height:1.6;margin-top:12px}.foot{text-align:center;color:#748278;font-size:12px;margin-top:24px}
-@media(max-width:650px){.card{padding:16px}.hero{padding:22px}.metrics{grid-template-columns:repeat(2,1fr)}.metric:first-child{grid-column:span 2}}
-</style></head><body><main class="wrap">
-<header><div class="logo">🥗</div><div><h1>Hitung Kalori AI</h1><p>Foto makanan, ketahui kalori dan nutrisinya.</p></div></header>
-<section class="hero"><h2>Analisis otomatis dengan Google Gemini</h2><p>Unggah foto makanan. Gemini memperkirakan porsi, kalori, protein, karbohidrat, lemak, dan serat. Foto dan riwayat hasil disimpan di Google Drive dan Sheets Anda.</p></section>
-<section class="card">
-<label for="endpoint">1. URL Web App Google Apps Script</label><input id="endpoint" type="url" placeholder="Tempel URL yang berakhiran /exec">
-<p class="help">Tempel URL dari deployment Apps Script Anda. URL tersimpan di browser ini.</p>
-<label>2. Pilih foto makanan/minuman</label><label class="drop" for="photo"><div style="font-size:32px">📷</div><b>Tekan untuk memilih foto</b><div class="muted">JPG, PNG, WEBP · Maksimal 4 MB</div><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
-<img id="preview" class="preview" alt="Pratinjau foto makanan">
-<label for="note">Catatan tambahan (opsional)</label><textarea id="note" placeholder="Contoh: nasi satu centong, ayam digoreng, es teh manis..."></textarea>
-<button id="analyze" disabled>Analisis foto dengan Gemini</button><div class="status" id="status">Masukkan URL Apps Script dan pilih foto.</div>
-</section>
-<section class="card result" id="result">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-size:20px">Hasil analisis AI</h2><span id="confidence" class="confidence">Estimasi</span></div>
-<div class="metrics" id="metrics"></div><h3 style="margin:18px 0 6px">Rincian makanan</h3><div id="items"></div><div id="notes" class="notes"></div><p class="help">Hasil merupakan estimasi visual. Ukuran porsi, resep, minyak, gula, santan, dan saus yang tidak terlihat dapat menyebabkan perbedaan.</p>
-<a id="driveLink" class="linkbtn secondary" target="_blank" rel="noopener">Buka foto yang tersimpan di Google Drive</a>
-</section>
-<section class="card"><h3 style="margin-top:0">Riwayat tersimpan otomatis</h3><p class="help">Setiap foto yang dianalisis dicatat ke folder Google Drive dan spreadsheet pribadi Anda, termasuk total kalori dan makronutrien.</p></section>
-<p class="foot">Hitung Kalori AI · Google Apps Script + Drive + Sheets + Gemini</p></main>
-<iframe name="uploadFrame" id="uploadFrame" style="display:none"></iframe>
+:root{color-scheme:light;--ink:#172a22;--muted:#718078;--green:#176b4b;--green2:#0e4b35;--mint:#eaf4ed;--gold:#c7a66a;--line:#e4ebe6;--paper:#f4f7f4;--white:#fff;--shadow:0 18px 55px rgba(15,48,34,.08);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);padding-bottom:calc(26px + env(safe-area-inset-bottom))}
+button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
+.shell{max-width:1080px;margin:0 auto;padding:18px 20px 42px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 0 20px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand-mark{width:44px;height:44px;border-radius:15px;background:#123d2d;display:grid;place-items:center;box-shadow:0 7px 17px #123d2d22;flex:none}.brand-mark img{width:31px;height:31px}
+.brand-title{font-size:17px;letter-spacing:-.4px;font-weight:850;white-space:nowrap}.brand-sub{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.top-actions{display:flex;align-items:center;gap:8px}.status-pill,.pro-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:750;white-space:nowrap}.pro-pill{background:#f1e9d8;color:#765b2b;letter-spacing:.07em}.status-pill{background:#edf2ee;color:#5e7065}.dot{width:7px;height:7px;border-radius:50%;background:#d5a14b}.status-pill.connected .dot{background:#2c9c65}
+.icon-btn{width:39px;height:39px;border:1px solid var(--line);border-radius:13px;background:#fff;color:#345447;display:grid;place-items:center;font-size:18px}
+.hero{position:relative;overflow:hidden;border-radius:26px;padding:30px 32px;background:radial-gradient(circle at 90% 10%,#427f6138 0,transparent 36%),linear-gradient(120deg,#102c21,#174d36 64%,#1a6547);color:white;box-shadow:0 20px 45px #0f392826;margin-bottom:18px}
+.hero:after{content:"";position:absolute;right:-45px;bottom:-125px;width:290px;height:290px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 26px #ffffff08,0 0 0 54px #ffffff06}
+.hero-grid{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.eyebrow{color:#d9c18e;text-transform:uppercase;letter-spacing:.16em;font-size:10px;font-weight:800}
+.hero h1{font-size:clamp(25px,4vw,38px);line-height:1.1;letter-spacing:-1.2px;margin:10px 0 10px;max-width:580px}
+.hero p{max-width:590px;margin:0;color:#d8e8dd;line-height:1.6;font-size:14px}
+.hero-chip{border:1px solid #ffffff33;background:#ffffff12;border-radius:18px;padding:15px 17px;min-width:145px;text-align:center;backdrop-filter:blur(8px)}
+.hero-chip strong{display:block;color:#f0dba8;font-size:23px;letter-spacing:-.8px}.hero-chip span{font-size:11px;color:#d6e5dc}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:22px 2px 10px}
+.section-head h2{font-size:15px;letter-spacing:-.3px;margin:0}.section-head p{font-size:11px;color:var(--muted);margin:4px 0 0}
+.dashboard{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:21px;padding:21px;box-shadow:var(--shadow)}
+.daily{display:flex;justify-content:space-between;align-items:center;gap:14px}.daily-label{font-size:12px;color:var(--muted);font-weight:650}.daily-number{font-size:32px;font-weight:850;letter-spacing:-1.3px;margin:6px 0 2px}.daily-number small{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:0}.daily-note{font-size:11px;color:var(--muted)}
+.daily-icon{height:52px;width:52px;border-radius:17px;background:var(--mint);display:grid;place-items:center;font-size:25px}
+.macro-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.macro-mini{background:#f6f8f6;border-radius:13px;padding:11px}.macro-mini b{display:block;font-size:16px}.macro-mini span{font-size:10px;color:var(--muted)}
+.target-card{display:flex;flex-direction:column;justify-content:space-between;gap:14px}.target-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.target-label{font-size:12px;color:var(--muted);font-weight:650}.target-edit{border:0;background:transparent;color:var(--green);font-size:11px;font-weight:800;padding:4px}
+.progress-track{height:9px;border-radius:99px;background:#edf1ed;overflow:hidden}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#176b4b,#72ad7c);border-radius:99px;transition:width .3s}
+.target-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.workspace{display:grid;grid-template-columns:1fr .92fr;gap:14px;align-items:start}
+.panel-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}.panel-title h2{font-size:16px;margin:0;letter-spacing:-.4px}.step-tag{font-size:10px;font-weight:800;color:#8a6d35;background:#f5efdf;padding:7px 9px;border-radius:99px}
+.dropzone{border:1.5px dashed #b7cdbd;background:#f8fbf8;border-radius:17px;padding:21px 15px;text-align:center;transition:.2s;min-height:145px;display:flex;align-items:center;justify-content:center}
+.dropzone.drag{border-color:var(--green);background:#edf7ef}.drop-inner{width:100%}.upload-symbol{width:47px;height:47px;margin:0 auto 10px;border-radius:16px;background:#e8f2ea;display:grid;place-items:center;font-size:23px;color:var(--green)}
+.dropzone strong{display:block;font-size:13px}.dropzone .muted{margin-top:5px}
+input[type=file]{display:none}.preview-wrap{display:none;margin-top:13px;position:relative}.preview-img{display:block;max-width:100%;max-height:290px;border-radius:15px;margin:auto;object-fit:contain;background:#f3f6f3}.remove-photo{position:absolute;top:8px;right:8px;border:0;border-radius:99px;background:#14291edc;color:white;width:32px;height:32px;font-size:18px}
+.photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.subtle-btn{border:1px solid #dce6de;background:#fff;color:#355b47;border-radius:12px;padding:11px;font-size:12px;font-weight:750;display:flex;align-items:center;justify-content:center;gap:7px}.subtle-btn:active,.primary-btn:active{transform:scale(.99)}
+.field-label{display:block;font-size:12px;font-weight:750;margin:17px 0 8px}.text-input{width:100%;border:1px solid #dce6df;border-radius:12px;padding:12px 13px;background:#fff;color:var(--ink);outline:none;font-size:13px}.text-input:focus{border-color:#77a88a;box-shadow:0 0 0 3px #176b4b12}.text-input::placeholder{color:#9aa69e}textarea.text-input{min-height:73px;resize:vertical;line-height:1.5}
+.primary-btn{width:100%;border:0;border-radius:13px;background:linear-gradient(110deg,#176b4b,#0f5138);color:white;padding:14px;font-weight:800;font-size:14px;box-shadow:0 9px 20px #176b4b25;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px}.primary-btn:disabled{opacity:.48;box-shadow:none;cursor:not-allowed}
+.status-box{margin-top:12px;background:#f2f6f2;border-radius:12px;padding:12px 13px;display:flex;gap:9px;align-items:flex-start;color:#5f7166;font-size:11px;line-height:1.55}.status-symbol{font-size:15px;flex:none}.status-box.error{background:#fff1ef;color:#9e4438}.status-box.success{background:#edf7ef;color:#286644}.spin{width:15px;height:15px;border:2px solid #c4d7c9;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;flex:none}@keyframes spin{to{transform:rotate(360deg)}}
+.connection{border-top:1px solid #edf1ed;margin-top:17px;padding-top:12px}.connection summary{list-style:none;cursor:pointer;color:#607267;font-size:11px;font-weight:800;display:flex;justify-content:space-between}.connection summary::-webkit-details-marker{display:none}.connection summary:after{content:"＋";color:var(--green);font-size:14px}.connection[open] summary:after{content:"−"}.connection .help{font-size:10px;color:var(--muted);line-height:1.5;margin:9px 0}
+.result-empty{min-height:325px;display:grid;place-items:center;text-align:center;padding:22px;color:var(--muted)}.empty-orbit{width:74px;height:74px;border-radius:24px;background:#eef5ef;display:grid;place-items:center;font-size:34px;margin:0 auto 14px}.result-empty strong{display:block;color:#3c5145;font-size:13px}.result-empty p{font-size:11px;max-width:220px;line-height:1.6;margin:7px auto}
+.result-body{display:none}.calorie-total{background:linear-gradient(115deg,#133c2b,#1f7651);border-radius:17px;color:white;padding:17px 18px;position:relative;overflow:hidden}.calorie-total small{font-size:10px;color:#d8e8dd;letter-spacing:.12em;font-weight:750}.calorie-big{font-size:38px;letter-spacing:-1.3px;font-weight:850;margin:5px 0 2px}.calorie-big span{font-size:13px;font-weight:650;letter-spacing:0;color:#d9e8df}.calorie-note{font-size:10px;color:#d7e7dc}
+.result-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.result-metric{background:#f5f8f5;border:1px solid #edf1ed;border-radius:13px;padding:12px}.result-metric b{font-size:19px;display:block;color:#204c36}.result-metric span{font-size:10px;color:var(--muted)}
+.food-list{margin-top:14px}.food-item{padding:13px 0;border-bottom:1px solid #edf1ed}.food-item:last-child{border-bottom:0}.food-head{display:flex;justify-content:space-between;gap:9px;font-size:12px}.food-head b:last-child{white-space:nowrap;color:var(--green)}.food-detail{font-size:10px;color:var(--muted);line-height:1.65;margin-top:5px}
+.ai-notes{margin-top:12px;padding:12px;background:#f8f6ef;border-radius:12px;color:#6e603d;font-size:10px;line-height:1.65}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.history-list{display:grid;gap:8px}.history-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f7f9f7;border-radius:12px;padding:11px 12px}.history-row strong{font-size:11px;display:block}.history-row small{font-size:10px;color:var(--muted)}.history-cal{font-weight:850;color:var(--green);white-space:nowrap;font-size:12px}
+.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#86938b;font-size:10px;margin-top:23px;padding:0 4px}.footer button{border:0;background:transparent;color:#607a68;font-size:10px;font-weight:800}
+.modal-backdrop{position:fixed;inset:0;background:#0a2119a8;display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:50;backdrop-filter:blur(5px)}.modal-backdrop.show{display:flex}.modal{width:min(500px,100%);background:white;border-radius:23px 23px 20px 20px;padding:22px 21px calc(20px + env(safe-area-inset-bottom));box-shadow:0 25px 90px #06181055}.modal-top{display:flex;justify-content:space-between;align-items:center}.modal h2{font-size:18px;margin:0}.modal-close{width:34px;height:34px;border:0;border-radius:10px;background:#f0f4f0;font-size:18px}.modal p{font-size:12px;color:var(--muted);line-height:1.6}.install-step{display:flex;gap:11px;margin:13px 0;align-items:flex-start}.install-step .n{width:25px;height:25px;border-radius:9px;background:#eaf4ed;color:var(--green);font-weight:850;display:grid;place-items:center;flex:none;font-size:12px}.install-step div:last-child{font-size:12px;line-height:1.55;color:#45594d}.install-step b{color:#192c22}
+@media(max-width:760px){.shell{padding:15px 14px 35px}.hero{padding:24px 21px}.hero-grid{display:block}.hero-chip{display:none}.dashboard,.workspace{grid-template-columns:1fr}.workspace{gap:12px}.panel{padding:17px}.result-empty{min-height:210px}.topbar{margin-bottom:14px}.brand-mark{width:40px;height:40px}.brand-title{font-size:15px}.hero h1{font-size:29px}.daily-number{font-size:29px}}
+@media(min-width:761px){.shell{padding-top:26px}.workspace{grid-template-columns:1.02fr .98fr}.panel{padding:23px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><img src="./icon.svg" alt=""></div>
+      <div><div class="brand-title">KALORI <span style="color:#b08e50">PRO</span></div><div class="brand-sub">AI nutrition companion</div></div>
+    </div>
+    <div class="top-actions">
+      <span class="pro-pill">✦ PRO EDITION</span>
+      <span class="status-pill" id="connectionPill"><i class="dot"></i><span id="connectionLabel">Belum tersambung</span></span>
+      <button class="icon-btn" id="installBtn" type="button" aria-label="Cara pasang aplikasi" title="Pasang aplikasi">＋</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Smart food intelligence</div>
+        <h1>Kenali makananmu.<br>Kelola nutrisimu.</h1>
+        <p>Ambil foto makanan, biarkan Google Gemini memperkirakan kalori dan kandungan gizinya. Riwayat tersimpan di Google Drive dan Google Sheets milik Anda.</p>
+      </div>
+      <div class="hero-chip"><strong>AI ✦</strong><span>Powered by Gemini</span></div>
+    </div>
+  </section>
+
+  <div class="section-head"><div><h2>Ringkasan harian</h2><p>Rekap analisis pada perangkat ini</p></div><span class="step-tag" id="todayLabel">HARI INI</span></div>
+  <section class="dashboard">
+    <div class="panel">
+      <div class="daily">
+        <div><div class="daily-label">Total kalori hari ini</div><div class="daily-number" id="dailyCalories">0 <small>kkal</small></div><div class="daily-note" id="dailyCount">Belum ada analisis hari ini</div></div>
+        <div class="daily-icon">🔥</div>
+      </div>
+      <div class="macro-row">
+        <div class="macro-mini"><b id="dailyProtein">0 g</b><span>Protein</span></div>
+        <div class="macro-mini"><b id="dailyCarbs">0 g</b><span>Karbohidrat</span></div>
+        <div class="macro-mini"><b id="dailyFat">0 g</b><span>Lemak</span></div>
+      </div>
+    </div>
+    <div class="panel target-card">
+      <div class="target-top"><div><div class="target-label">Target kalori pribadi</div><div class="daily-number" style="font-size:25px" id="targetDisplay">— <small>kkal</small></div></div><button class="target-edit" id="editTarget" type="button">ATUR TARGET</button></div>
+      <div class="progress-track"><div class="progress-fill" id="targetProgress"></div></div>
+      <div class="target-foot"><span id="targetProgressText">Masukkan target untuk melihat progres</span><span id="targetPercent">—</span></div>
+    </div>
+  </section>
+
+  <div class="section-head"><div><h2>Analisis makanan</h2><p>Unggah dari kamera atau galeri iPhone</p></div><span class="step-tag">01 / SCAN</span></div>
+  <section class="workspace">
+    <div class="panel">
+      <div class="panel-title"><h2>Foto makanan atau minuman</h2><span class="step-tag">GEMINI AI</span></div>
+      <div class="dropzone" id="dropzone">
+        <div class="drop-inner" id="dropContent">
+          <div class="upload-symbol">＋</div>
+          <strong>Tambahkan foto makanan</strong>
+          <div class="muted">Ambil foto langsung atau pilih dari galeri · Maks 4 MB setelah optimasi</div>
+        </div>
+      </div>
+      <div class="photo-actions">
+        <button class="subtle-btn" type="button" id="cameraBtn">◎ Ambil foto</button>
+        <button class="subtle-btn" type="button" id="libraryBtn">▧ Pilih dari Foto</button>
+      </div>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment">
+      <input id="libraryInput" type="file" accept="image/*">
+      <div class="preview-wrap" id="previewWrap"><img class="preview-img" id="preview" alt="Pratinjau makanan"><button type="button" class="remove-photo" id="removePhoto" aria-label="Hapus foto">×</button></div>
+
+      <label class="field-label" for="note">Catatan tambahan <span style="font-weight:500;color:var(--muted)">(opsional)</span></label>
+      <textarea class="text-input" id="note" placeholder="Contoh: bakso 1 mangkuk, tambah mi, tanpa kecap..."></textarea>
+      <button class="primary-btn" id="analyze" type="button" disabled><span>✦</span> Analisis dengan Gemini</button>
+      <div class="status-box" id="statusBox" role="status" aria-live="polite"><span class="status-symbol">ⓘ</span><span id="statusText">Hubungkan URL Web App pada Pengaturan, lalu pilih foto makanan.</span></div>
+
+      <details class="connection" id="settings">
+        <summary>Pengaturan koneksi Google</summary>
+        <p class="help">Masukkan URL Web App dari Google Apps Script. URL ini disimpan secara lokal pada perangkat ini dan tidak dikirim ke GitHub.</p>
+        <label class="field-label" for="endpoint">URL Web App (akhiran /exec)</label>
+        <input class="text-input" id="endpoint" type="url" inputmode="url" autocomplete="url" placeholder="https://script.google.com/macros/s/.../exec">
+        <button type="button" id="saveEndpoint" class="subtle-btn" style="width:100%;margin-top:10px">Simpan koneksi</button>
+      </details>
+    </div>
+
+    <div class="panel" id="resultPanel">
+      <div class="panel-title"><h2>Hasil analisis nutrisi</h2><span class="step-tag">02 / INSIGHT</span></div>
+      <div class="result-empty" id="resultEmpty"><div><div class="empty-orbit">🥣</div><strong>Hasil analisis akan tampil di sini</strong><p>Ambil atau pilih foto makanan. Gemini akan mengenali makanan, memperkirakan porsi, lalu menghitung nutrisinya.</p></div></div>
+      <div class="result-body" id="resultBody">
+        <div class="calorie-total"><small>ESTIMASI TOTAL ENERGI</small><div class="calorie-big" id="resultCalories">0 <span>kkal</span></div><div class="calorie-note" id="resultConfidence">Estimasi berdasarkan foto</div></div>
+        <div class="result-metrics" id="resultMetrics"></div>
+        <div class="food-list" id="foodList"></div>
+        <div class="ai-notes" id="aiNotes"></div>
+        <div class="result-actions">
+          <a class="subtle-btn" id="driveLink" target="_blank" rel="noopener" style="text-decoration:none">↗ Foto di Drive</a>
+          <button class="subtle-btn" id="shareResult" type="button">↗ Bagikan hasil</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head"><div><h2>Aktivitas terbaru</h2><p>Riwayat ringkas di perangkat ini</p></div><span class="step-tag">03 / HISTORY</span></div>
+  <section class="panel">
+    <div class="history-list" id="historyList"><div class="muted" style="font-size:12px">Belum ada aktivitas pada perangkat ini.</div></div>
+  </section>
+
+  <footer class="footer"><span>Kalori Pro · Google Gemini · Drive · Sheets</span><button type="button" id="footerInstall">CARA PASANG DI IPHONE</button></footer>
+</main>
+
+<div class="modal-backdrop" id="installModal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+  <div class="modal">
+    <div class="modal-top"><h2 id="installTitle">Pasang Kalori Pro di iPhone</h2><button type="button" class="modal-close" id="closeInstall" aria-label="Tutup">×</button></div>
+    <p>Tambahkan website ini ke Home Screen agar bisa dibuka seperti aplikasi, tanpa address bar Safari.</p>
+    <div class="install-step"><span class="n">1</span><div>Buka halaman ini menggunakan <b>Safari</b> di iPhone atau iPad.</div></div>
+    <div class="install-step"><span class="n">2</span><div>Tekan tombol <b>Bagikan</b> (ikon kotak dengan panah ke atas).</div></div>
+    <div class="install-step"><span class="n">3</span><div>Pilih <b>Tambah ke Layar Utama / Add to Home Screen</b>.</div></div>
+    <div class="install-step"><span class="n">4</span><div>Aktifkan <b>Buka sebagai App / Open as Web App</b> jika ditampilkan, lalu tekan <b>Tambah / Add</b>.</div></div>
+    <p style="margin-bottom:0">Setelah dipasang, buka ikon Kalori Pro dari Home Screen. Masukkan URL Google Apps Script sekali lagi pada Pengaturan koneksi jika diminta.</p>
+    <button class="primary-btn" type="button" id="installDone">Mengerti</button>
+  </div>
+</div>
+
+<iframe name="uploadFrame" id="uploadFrame" title="Pengiriman hasil analisis" style="display:none"></iframe>
+
 <script>
-const $=id=>document.getElementById(id);let file=null,pendingNonce=null;
-const endpoint=$('endpoint');endpoint.value=localStorage.getItem('hka_gas_url')||'';
-function validEndpoint(){return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(endpoint.value.trim())}
-endpoint.addEventListener('change',()=>{localStorage.setItem('hka_gas_url',endpoint.value.trim());$('analyze').disabled=!(file&&validEndpoint())});
-$('photo').addEventListener('change',()=>{file=$('photo').files[0]||null;$('result').style.display='none';if(!file){$('analyze').disabled=true;$('preview').style.display='none';return}if(!/^image\/(jpeg|png|webp)$/.test(file.type)||file.size>4*1024*1024){file=null;$('analyze').disabled=true;$('status').textContent='Format tidak didukung atau ukuran melebihi 4 MB.';$('preview').style.display='none';return}$('preview').src=URL.createObjectURL(file);$('preview').style.display='block';$('analyze').disabled=!validEndpoint();$('status').textContent='Foto siap dianalisis.'});
-function submitForm(data){pendingNonce=String(Date.now())+String(Math.floor(Math.random()*100000));data.nonce=pendingNonce;const form=document.createElement('form');form.method='POST';form.action=endpoint.value.trim();form.target='uploadFrame';form.style.display='none';Object.entries(data).forEach(([k,v])=>{const el=document.createElement('textarea');el.name=k;el.value=String(v??'');form.appendChild(el)});document.body.appendChild(form);form.submit();form.remove()}
-$('analyze').addEventListener('click',()=>{if(!file||!validEndpoint()){$('status').textContent='Periksa URL Web App dan pilih foto terlebih dahulu.';return}$('analyze').disabled=true;$('analyze').textContent='Gemini sedang menganalisis…';$('status').textContent='Mengirim foto ke Google Apps Script, menyimpan ke Drive, lalu meminta Gemini menghitung estimasi nutrisi. Proses dapat memerlukan beberapa detik.';const reader=new FileReader();reader.onload=()=>submitForm({photoData:reader.result,fileName:file.name,note:$('note').value});reader.onerror=()=>{$('status').textContent='Gagal membaca foto dari perangkat.';$('analyze').disabled=false;$('analyze').textContent='Analisis foto dengan Gemini'};reader.readAsDataURL(file)});
-window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.type!=='hka-gemini-result'||String(d.nonce)!==String(pendingNonce))return;$('analyze').disabled=false;$('analyze').textContent='Analisis foto dengan Gemini';$('status').textContent=d.message||'Proses selesai';if(!d.ok){if(d.driveUrl){$('status').textContent+=' Foto sudah tersimpan di Drive, tetapi AI belum berhasil menganalisisnya.'}return}render(d.result||{});$('driveLink').href=d.driveUrl||'#';$('result').style.display='block';$('result').scrollIntoView({behavior:'smooth',block:'start'})});
-function render(r){const t=r.total||{};$('confidence').textContent='Keyakinan: '+(r.confidence||'sedang');const metrics=[['Kalori',t.calories_kcal,'kkal'],['Protein',t.protein_g,'gram'],['Karbohidrat',t.carbs_g,'gram'],['Lemak',t.fat_g,'gram'],['Serat',t.fiber_g,'gram']];$('metrics').innerHTML=metrics.map(([name,value,unit])=>'<div class="metric"><b>'+num(value)+'</b><span>'+name+' ('+unit+')</span></div>').join('');if(!r.is_food){$('items').innerHTML='<p>Foto belum dikenali sebagai makanan atau minuman.</p>'}else{$('items').innerHTML=(r.items||[]).map(it=>'<div class="food"><div class="foodhead"><b>'+esc(it.name)+'</b><b>'+num(it.calories_kcal)+' kkal</b></div><small>'+esc(it.portion)+' · Protein '+num(it.protein_g)+'g · Karbo '+num(it.carbs_g)+'g · Lemak '+num(it.fat_g)+'g · Serat '+num(it.fiber_g)+'g<br>'+esc(it.assumption||'')+'</small></div>').join('')||'<p>Rincian makanan tidak tersedia.</p>'}$('notes').innerHTML=(r.notes||[]).map(x=>'• '+esc(x)).join('<br>')+(r.follow_up_question?'<br><br>❓ '+esc(r.follow_up_question):'')}
-function num(v){const n=Number(v||0);return Number.isFinite(n)?n.toLocaleString('id-ID',{maximumFractionDigits:1}):'0'}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-</script></body></html>
+const $ = (id) => document.getElementById(id);
+const endpoint = $('endpoint');
+let selectedFile = null;
+let pendingNonce = null;
+let responseTimer = null;
+let deferredInstallPrompt = null;
+let lastShareText = '';
+
+endpoint.value = localStorage.getItem('hka_gas_url') || '';
+updateConnectionBadge();
+refreshDashboard();
+
+function validEndpoint() {
+  return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(endpoint.value.trim());
+}
+function updateConnectionBadge() {
+  const connected = validEndpoint();
+  $('connectionPill').classList.toggle('connected', connected);
+  $('connectionLabel').textContent = connected ? 'Tersambung' : 'Belum tersambung';
+  updateAnalyzeButton();
+}
+function saveEndpoint() {
+  if (!validEndpoint()) {
+    setStatus('URL belum sesuai. Tempel URL Web App Google Apps Script yang berakhiran /exec.', 'error');
+    return;
+  }
+  localStorage.setItem('hka_gas_url', endpoint.value.trim());
+  updateConnectionBadge();
+  setStatus('Koneksi tersimpan pada perangkat ini. Silakan pilih foto untuk mulai analisis.', 'success');
+  $('settings').open = false;
+}
+$('saveEndpoint').addEventListener('click', saveEndpoint);
+endpoint.addEventListener('change', updateConnectionBadge);
+endpoint.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveEndpoint(); });
+
+function setStatus(message, type = 'normal', loading = false) {
+  const box = $('statusBox');
+  box.className = 'status-box' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  $('statusText').textContent = message;
+  const symbol = $('statusBox').querySelector('.status-symbol');
+  symbol.innerHTML = loading ? '<span class="spin"></span>' : (type === 'error' ? '!' : type === 'success' ? '✓' : 'ⓘ');
+}
+function updateAnalyzeButton() {
+  $('analyze').disabled = !(selectedFile && validEndpoint()) || $('analyze').dataset.busy === '1';
+}
+
+function choosePhoto(file) {
+  if (!file) return;
+  if (!String(file.type || '').startsWith('image/')) {
+    setStatus('File yang dipilih bukan gambar. Pilih foto dari kamera atau galeri.', 'error');
+    return;
+  }
+  selectedFile = file;
+  const objectUrl = URL.createObjectURL(file);
+  $('preview').src = objectUrl;
+  $('previewWrap').style.display = 'block';
+  $('dropContent').innerHTML = '<div class="upload-symbol">✓</div><strong>Foto siap dianalisis</strong><div class="muted">Pratinjau terlihat di bawah</div>';
+  setStatus('Foto sudah dipilih. Tekan Analisis dengan Gemini untuk menghitung nutrisinya.', 'success');
+  updateAnalyzeButton();
+}
+$('cameraBtn').addEventListener('click', () => $('cameraInput').click());
+$('libraryBtn').addEventListener('click', () => $('libraryInput').click());
+$('cameraInput').addEventListener('change', (e) => { choosePhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
+$('libraryInput').addEventListener('change', (e) => { choosePhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
+$('removePhoto').addEventListener('click', clearPhoto);
+function clearPhoto() {
+  selectedFile = null;
+  $('preview').removeAttribute('src');
+  $('previewWrap').style.display = 'none';
+  $('dropContent').innerHTML = '<div class="upload-symbol">＋</div><strong>Tambahkan foto makanan</strong><div class="muted">Ambil foto langsung atau pilih dari galeri · Maks 4 MB setelah optimasi</div>';
+  updateAnalyzeButton();
+}
+
+function imageToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const maxSide = 1600;
+        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(url);
+          if (!blob) return reject(new Error('Foto tidak bisa diproses di browser ini. Coba pilih foto JPG atau PNG.'));
+          if (blob.size > 4 * 1024 * 1024) return reject(new Error('Foto masih terlalu besar setelah optimasi. Pilih foto dengan resolusi lebih kecil.'));
+          resolve(blob);
+        }, 'image/jpeg', 0.82);
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        reject(new Error('Browser tidak dapat mengolah foto ini. Pilih foto JPG atau PNG.'));
+      }
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Foto tidak dapat dibaca. Pada iPhone, coba pilih foto lain atau ekspor sebagai JPEG.'));
+    };
+    image.src = url;
+  });
+}
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Gagal membaca foto dari perangkat.'));
+    reader.readAsDataURL(blob);
+  });
+}
+function setBusy(busy) {
+  $('analyze').dataset.busy = busy ? '1' : '0';
+  $('analyze').innerHTML = busy ? '<span class="spin" style="border-color:#ffffff70;border-top-color:#fff"></span> Gemini sedang menganalisis…' : '<span>✦</span> Analisis dengan Gemini';
+  updateAnalyzeButton();
+}
+function submitToAppsScript(data) {
+  pendingNonce = String(Date.now()) + String(Math.floor(Math.random() * 1000000));
+  data.nonce = pendingNonce;
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = endpoint.value.trim();
+  form.target = 'uploadFrame';
+  form.style.display = 'none';
+  Object.entries(data).forEach(([key, value]) => {
+    const input = document.createElement('textarea');
+    input.name = key;
+    input.value = String(value ?? '');
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+}
+$('analyze').addEventListener('click', async () => {
+  if (!selectedFile || !validEndpoint()) {
+    $('settings').open = !validEndpoint();
+    setStatus('Pastikan URL Web App sudah disimpan dan foto sudah dipilih.', 'error');
+    return;
+  }
+  setBusy(true);
+  $('resultEmpty').style.display = 'grid';
+  $('resultBody').style.display = 'none';
+  setStatus('Mengoptimalkan foto untuk iPhone dan mengirimkannya ke Gemini. Jangan tutup aplikasi sampai selesai.', 'normal', true);
+  try {
+    const jpeg = await imageToJpeg(selectedFile);
+    const dataUrl = await blobToDataUrl(jpeg);
+    setStatus('Foto terkirim. Gemini sedang mengenali makanan, memperkirakan porsi, dan menghitung nutrisi…', 'normal', true);
+    submitToAppsScript({ photoData: dataUrl, fileName: (selectedFile.name || 'foto-makanan').replace(/\.[^.]+$/, '') + '.jpg', note: $('note').value });
+    if (responseTimer) clearTimeout(responseTimer);
+    responseTimer = setTimeout(() => {
+      if ($('analyze').dataset.busy === '1') {
+        setBusy(false);
+        setStatus('Belum menerima balasan dari server. Periksa menu Eksekusi Apps Script dan Google Sheets. Bila baris sudah berstatus Selesai - Gemini, muat ulang website dan coba lagi setelah koneksi diperiksa.', 'error');
+      }
+    }, 90000);
+  } catch (error) {
+    setBusy(false);
+    setStatus(error.message || 'Foto gagal diproses.', 'error');
+  }
+});
+
+window.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'hka-gemini-result' || String(data.nonce) !== String(pendingNonce)) return;
+  if (responseTimer) clearTimeout(responseTimer);
+  setBusy(false);
+  setStatus(data.message || 'Proses selesai.', data.ok ? 'success' : 'error');
+  if (!data.ok) {
+    if (data.driveUrl) $('driveLink').href = data.driveUrl;
+    return;
+  }
+  renderResult(data.result || {}, data.driveUrl || '');
+  saveLocalEntry(data.result || {}, data.fileName || 'Foto makanan');
+});
+
+function renderResult(result, driveUrl) {
+  const total = result.total || {};
+  $('resultCalories').innerHTML = formatNumber(total.calories_kcal) + ' <span>kkal</span>';
+  $('resultConfidence').textContent = 'Tingkat keyakinan AI: ' + (result.confidence || 'sedang');
+  const metrics = [
+    ['Protein', total.protein_g, 'g'],
+    ['Karbohidrat', total.carbs_g, 'g'],
+    ['Lemak', total.fat_g, 'g'],
+    ['Serat', total.fiber_g, 'g']
+  ];
+  $('resultMetrics').innerHTML = metrics.map(([name, value, unit]) =>
+    '<div class="result-metric"><b>' + formatNumber(value) + ' ' + unit + '</b><span>' + name + '</span></div>'
+  ).join('');
+  if (!result.is_food) {
+    $('foodList').innerHTML = '<p class="help">Foto belum dikenali sebagai makanan atau minuman. Silakan coba foto lain dengan pencahayaan lebih jelas.</p>';
+  } else {
+    $('foodList').innerHTML = '<h3 style="font-size:13px;margin:0 0 6px">Rincian makanan</h3>' +
+      (result.items || []).map(item =>
+        '<div class="food-item"><div class="food-head"><b>' + escapeHtml(item.name) + '</b><b>' + formatNumber(item.calories_kcal) + ' kkal</b></div>' +
+        '<div class="food-detail">' + escapeHtml(item.portion) + ' · Protein ' + formatNumber(item.protein_g) + 'g · Karbo ' + formatNumber(item.carbs_g) + 'g · Lemak ' + formatNumber(item.fat_g) + 'g · Serat ' + formatNumber(item.fiber_g) + 'g<br>' + escapeHtml(item.assumption || '') + '</div></div>'
+      ).join('');
+  }
+  const notes = (result.notes || []).map(note => '• ' + escapeHtml(note)).join('<br>');
+  const followup = result.follow_up_question ? '<br><br>❓ ' + escapeHtml(result.follow_up_question) : '';
+  $('aiNotes').innerHTML = notes + followup || 'Angka merupakan perkiraan visual dan dapat berbeda dari nilai sebenarnya.';
+  $('driveLink').href = driveUrl || '#';
+  $('resultEmpty').style.display = 'none';
+  $('resultBody').style.display = 'block';
+  lastShareText = 'Hasil Hitung Kalori AI\nKalori: ' + formatNumber(total.calories_kcal) + ' kkal\nProtein: ' + formatNumber(total.protein_g) + ' g\nKarbohidrat: ' + formatNumber(total.carbs_g) + ' g\nLemak: ' + formatNumber(total.fat_g) + ' g\nSerat: ' + formatNumber(total.fiber_g) + ' g\nEstimasi visual dari Google Gemini.';
+  $('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function formatNumber(value) {
+  const number = Number(value || 0);
+  return Number.isFinite(number) ? number.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : '0';
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
+}
+
+function readLocalLog() {
+  try { return JSON.parse(localStorage.getItem('hka_pro_log') || '[]'); } catch (e) { return []; }
+}
+function saveLocalEntry(result, fileName) {
+  const log = readLocalLog();
+  log.unshift({ date: new Date().toISOString(), name: fileName, total: result.total || {} });
+  localStorage.setItem('hka_pro_log', JSON.stringify(log.slice(0, 80)));
+  refreshDashboard();
+}
+function refreshDashboard() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const todayEntries = readLocalLog().filter(entry => new Date(entry.date).toLocaleDateString('en-CA') === today);
+  const totals = todayEntries.reduce((sum, entry) => {
+    const t = entry.total || {};
+    sum.calories += Number(t.calories_kcal || 0);
+    sum.protein += Number(t.protein_g || 0);
+    sum.carbs += Number(t.carbs_g || 0);
+    sum.fat += Number(t.fat_g || 0);
+    return sum;
+  }, { calories:0, protein:0, carbs:0, fat:0 });
+  $('dailyCalories').innerHTML = formatNumber(totals.calories) + ' <small>kkal</small>';
+  $('dailyProtein').textContent = formatNumber(totals.protein) + ' g';
+  $('dailyCarbs').textContent = formatNumber(totals.carbs) + ' g';
+  $('dailyFat').textContent = formatNumber(totals.fat) + ' g';
+  $('dailyCount').textContent = todayEntries.length ? todayEntries.length + ' hasil analisis di perangkat ini' : 'Belum ada analisis hari ini';
+  $('todayLabel').textContent = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }).toUpperCase();
+  const goal = Number(localStorage.getItem('hka_pro_goal') || 0);
+  $('targetDisplay').innerHTML = goal > 0 ? formatNumber(goal) + ' <small>kkal</small>' : '— <small>kkal</small>';
+  const percent = goal > 0 ? Math.min(100, Math.round(totals.calories / goal * 100)) : 0;
+  $('targetProgress').style.width = percent + '%';
+  $('targetPercent').textContent = goal > 0 ? percent + '%' : '—';
+  $('targetProgressText').textContent = goal > 0 ? formatNumber(Math.max(0, goal - totals.calories)) + ' kkal tersisa' : 'Masukkan target untuk melihat progres';
+  const log = readLocalLog().slice(0, 5);
+  $('historyList').innerHTML = log.length ? log.map(entry => {
+    const time = new Date(entry.date).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    return '<div class="history-row"><div><strong>' + escapeHtml(entry.name) + '</strong><small>' + time + '</small></div><span class="history-cal">' + formatNumber(entry.total && entry.total.calories_kcal) + ' kkal</span></div>';
+  }).join('') : '<div class="muted" style="font-size:12px">Belum ada aktivitas pada perangkat ini.</div>';
+}
+$('editTarget').addEventListener('click', () => {
+  const existing = localStorage.getItem('hka_pro_goal') || '';
+  const answer = window.prompt('Masukkan target kalori harian Anda (kkal). Kosongkan untuk menghapus target.', existing);
+  if (answer === null) return;
+  if (answer.trim() === '') localStorage.removeItem('hka_pro_goal');
+  else if (Number.isFinite(Number(answer)) && Number(answer) > 0 && Number(answer) <= 10000) localStorage.setItem('hka_pro_goal', String(Number(answer)));
+  else { setStatus('Target harus berupa angka antara 1 dan 10.000 kkal.', 'error'); return; }
+  refreshDashboard();
+});
+
+$('shareResult').addEventListener('click', async () => {
+  if (!lastShareText) return;
+  try {
+    if (navigator.share) await navigator.share({ title:'Hasil Kalori Pro', text:lastShareText });
+    else { await navigator.clipboard.writeText(lastShareText); setStatus('Ringkasan hasil disalin.', 'success'); }
+  } catch (error) {
+    if (error && error.name !== 'AbortError') setStatus('Tidak dapat membagikan hasil dari perangkat ini.', 'error');
+  }
+});
+
+function showInstallHelp() { $('installModal').classList.add('show'); }
+function hideInstallHelp() { $('installModal').classList.remove('show'); }
+$('installBtn').addEventListener('click', async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  } else showInstallHelp();
+});
+$('footerInstall').addEventListener('click', showInstallHelp);
+$('closeInstall').addEventListener('click', hideInstallHelp);
+$('installDone').addEventListener('click', hideInstallHelp);
+$('installModal').addEventListener('click', event => { if (event.target === $('installModal')) hideInstallHelp(); });
+window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); deferredInstallPrompt = event; $('installBtn').textContent = '⇧'; });
+window.addEventListener('appinstalled', () => { setStatus('Kalori Pro berhasil dipasang pada perangkat.', 'success'); });
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
