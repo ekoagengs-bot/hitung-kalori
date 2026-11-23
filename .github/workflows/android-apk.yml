@@ -1,0 +1,60 @@
+name: Build Kalori Pro Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalori-pro-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: kalori-pro-v1.0.${{ github.run_number }}
+          name: Kalori Pro Android v1.0.${{ github.run_number }}
+          body: |
+            APK Kalori Pro untuk Android.
+            APK ini memakai website Kalori Pro dan backend Google Apps Script + Gemini yang sudah dikonfigurasi.
+            Build debug ditandatangani otomatis untuk pemasangan langsung. Bukan rilis Play Store.
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
