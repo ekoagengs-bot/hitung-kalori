@@ -1,43 +1,45 @@
-# Hitung Kalori AI — Google Apps Script + Gemini
+# Kalori Pro — Hitung Kalori AI untuk Web dan iOS
 
-## Fitur
-- Website statis melalui GitHub Pages.
-- Foto disimpan ke Google Drive.
-- Gemini 3.1 Flash-Lite menganalisis foto makanan/minuman secara otomatis.
-- Hasil kalori, protein, karbohidrat, lemak, serat, asumsi, dan tingkat keyakinan disimpan ke Google Sheets.
-- Tidak menggunakan OpenAI API. Gemini Developer API memiliki free tier dengan batas penggunaan; tidak dijamin tanpa batas.
+Kalori Pro adalah Progressive Web App (PWA) yang dipublikasikan melalui GitHub Pages. Di iPhone/iPad, pengguna dapat menambahkannya ke Home Screen dan membukanya dalam mode aplikasi melalui Safari.
 
-## 1. Buat Gemini API Key
-1. Buka https://aistudio.google.com/app/apikey.
-2. Masuk dengan akun Google Anda.
-3. Klik Create API key dan salin kuncinya.
-4. Jangan masukkan key ke GitHub, website, atau chat. Simpan nanti di Script Properties Google Apps Script.
+## Fitur edisi Pro
+- Desain premium yang responsif untuk desktop, tablet, dan iPhone.
+- Ambil foto langsung dari kamera perangkat atau pilih dari galeri.
+- Optimasi foto di perangkat (resize + JPEG) sebelum dikirim, termasuk mengurangi ukuran foto iPhone.
+- Analisis gambar otomatis dengan Google Gemini melalui Google Apps Script.
+- Simpan foto di Google Drive dan estimasi nutrisi di Google Sheets.
+- Ringkasan konsumsi harian dan target kalori lokal pada perangkat.
+- Bagikan ringkasan hasil melalui menu Share perangkat.
+- PWA manifest dan service worker untuk Home Screen dan cache shell offline.
 
-Model bawaan: `gemini-3.1-flash-lite`. Harga/kelayakan free tier dan batas permintaan dapat berubah; periksa halaman pricing resmi Gemini API. Pada free tier, konten yang dikirim dapat digunakan Google untuk meningkatkan produk.
+## Backend yang digunakan
+- GitHub Pages: hosting UI.
+- Google Apps Script: endpoint backend.
+- Google Drive: penyimpanan foto.
+- Google Sheets: riwayat analisis.
+- Gemini Developer API: analisis visual. Free tier memiliki batas kuota dan kebijakan data tersendiri; cek pricing dan terms terkini Google AI Studio.
 
-## 2. Siapkan Google Apps Script
-1. Buka https://script.google.com/.
-2. Salin seluruh isi file `google-apps-script/Code.gs` dari repository ini ke editor Apps Script (file bernama Code.gs).
-3. Klik Save.
-4. Pilih fungsi `setup`, klik Run, dan berikan izin untuk Drive dan Sheets bila diminta.
-5. Buka Project Settings (ikon roda gigi di panel kiri).
-6. Pada bagian Script Properties, klik Add script property:
-   - Property: `GEMINI_API_KEY`
-   - Value: tempel Gemini API key Anda
-7. (Opsional) Tambahkan `GEMINI_MODEL` = `gemini-3.1-flash-lite`.
-8. Deploy > Manage deployments > Edit (ikon pensil) > Version: New version > Deploy. Pastikan deployment adalah Web app, Execute as: Me, Who has access: Anyone.
-9. Salin URL Web app yang berakhir `/exec`.
+## Perbarui Apps Script
+Jika Anda sudah menjalankan versi Gemini sebelumnya dan hanya memperbarui UI, Apps Script yang lama tetap bisa digunakan. Jika ingin memakai versi Code.gs terbaru, salin file `google-apps-script/Code.gs` ke Apps Script, simpan, lalu Deploy > Manage deployments > Edit > New version > Deploy. Jangan jalankan `doPost` langsung dari tombol Run.
 
-## 3. Menggunakan website
-1. Buka https://ekoagengs-bot.github.io/hitung-kalori/.
-2. Tempel URL Apps Script ke kolom URL Web App. URL disimpan di browser.
-3. Pilih foto JPG/PNG/WEBP, maksimal 4 MB.
-4. Klik Analisis foto dengan Gemini.
-5. Website akan mengirim foto ke Apps Script. Apps Script menyimpan foto ke Drive, mengirimkan gambar ke Gemini, lalu menampilkan dan menyimpan hasil nutrisi ke Sheets.
+## Konfigurasi website
+1. Buka website Kalori Pro.
+2. Buka Pengaturan koneksi di kartu Analisis makanan.
+3. Tempel URL Web App Apps Script berakhiran `/exec`.
+4. Klik Simpan koneksi.
+5. Pilih foto dan klik Analisis dengan Gemini.
 
-## Privasi dan batas
-- Foto tersimpan di Drive pemilik Apps Script dan juga dikirim ke Gemini untuk dianalisis.
-- Free tier Gemini memiliki kuota/batas; setelah kuota habis, coba kembali nanti atau pertimbangkan tier berbayar. Tidak ada jaminan layanan gratis tanpa batas.
-- Pada free tier, konten dapat digunakan Google untuk meningkatkan produk. Jangan unggah foto atau informasi sensitif.
-- Web App dengan akses Anyone bersifat publik bagi siapa pun yang mengetahui URL. Jangan membagikan URL; penggunaan publik bisa menghabiskan kuota API, Apps Script, dan Drive.
-- Nilai gizi adalah estimasi visual, bukan pengukuran laboratorium.
+## Memasang di iPhone/iPad
+1. Buka website melalui Safari.
+2. Tekan tombol Share (kotak dengan panah ke atas).
+3. Pilih Add to Home Screen / Tambah ke Layar Utama.
+4. Jika muncul, aktifkan Open as Web App / Buka sebagai App.
+5. Tekan Add / Tambah.
+6. Buka ikon Kalori Pro di Home Screen. Karena penyimpanan tiap Home Screen web app dapat terpisah dari tab Safari, masukkan URL Apps Script sekali lagi di Pengaturan koneksi jika belum tersimpan.
+
+## Catatan
+- Ini adalah PWA, bukan aplikasi native yang diterbitkan di Apple App Store. PWA dijalankan oleh Safari/WebKit.
+- Fitur analisis memerlukan internet dan backend Apps Script aktif. Service worker hanya menyimpan shell UI agar halaman dapat dibuka saat offline; foto tidak dianalisis tanpa koneksi.
+- Foto dikirim ke Google Apps Script dan Google Gemini. Hindari foto atau data pribadi yang sensitif.
+- Ringkasan harian di bagian dashboard disimpan lokal di browser/perangkat tersebut. Data lengkap tetap tercatat di Google Sheets.
+- Hasil kalori adalah estimasi visual, bukan pengukuran laboratorium.
