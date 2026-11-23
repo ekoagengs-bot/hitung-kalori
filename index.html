@@ -57,6 +57,9 @@ input[type=file]{display:none}.preview-wrap{display:none;margin-top:13px;positio
 .result-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.result-metric{background:#f5f8f5;border:1px solid #edf1ed;border-radius:13px;padding:12px}.result-metric b{font-size:19px;display:block;color:#204c36}.result-metric span{font-size:10px;color:var(--muted)}
 .food-list{margin-top:14px}.food-item{padding:13px 0;border-bottom:1px solid #edf1ed}.food-item:last-child{border-bottom:0}.food-head{display:flex;justify-content:space-between;gap:9px;font-size:12px}.food-head b:last-child{white-space:nowrap;color:var(--green)}.food-detail{font-size:10px;color:var(--muted);line-height:1.65;margin-top:5px}
 .ai-notes{margin-top:12px;padding:12px;background:#f8f6ef;border-radius:12px;color:#6e603d;font-size:10px;line-height:1.65}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.danger-btn{border:1px solid #f0d4d0;background:#fff4f2;color:#a33f34;border-radius:12px;padding:11px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px}
+.danger-btn:disabled{opacity:.5;cursor:wait}
+.history-delete{border:1px solid #f0d4d0;background:#fff4f2;color:#a33f34;border-radius:9px;padding:7px 9px;font-size:10px;font-weight:800;white-space:nowrap}
 .history-list{display:grid;gap:8px}.history-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f7f9f7;border-radius:12px;padding:11px 12px}.history-row strong{font-size:11px;display:block}.history-row small{font-size:10px;color:var(--muted)}.history-cal{font-weight:850;color:var(--green);white-space:nowrap;font-size:12px}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#86938b;font-size:10px;margin-top:23px;padding:0 4px}.footer button{border:0;background:transparent;color:#607a68;font-size:10px;font-weight:800}
 .modal-backdrop{position:fixed;inset:0;background:#0a2119a8;display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:50;backdrop-filter:blur(5px)}.modal-backdrop.show{display:flex}.modal{width:min(500px,100%);background:white;border-radius:23px 23px 20px 20px;padding:22px 21px calc(20px + env(safe-area-inset-bottom));box-shadow:0 25px 90px #06181055}.modal-top{display:flex;justify-content:space-between;align-items:center}.modal h2{font-size:18px;margin:0}.modal-close{width:34px;height:34px;border:0;border-radius:10px;background:#f0f4f0;font-size:18px}.modal p{font-size:12px;color:var(--muted);line-height:1.6}.install-step{display:flex;gap:11px;margin:13px 0;align-items:flex-start}.install-step .n{width:25px;height:25px;border-radius:9px;background:#eaf4ed;color:var(--green);font-weight:850;display:grid;place-items:center;flex:none;font-size:12px}.install-step div:last-child{font-size:12px;line-height:1.55;color:#45594d}.install-step b{color:#192c22}
@@ -154,6 +157,7 @@ input[type=file]{display:none}.preview-wrap{display:none;margin-top:13px;positio
         <div class="result-actions">
           <a class="subtle-btn" id="driveLink" target="_blank" rel="noopener" style="text-decoration:none">↗ Foto di Drive</a>
           <button class="subtle-btn" id="shareResult" type="button">↗ Bagikan hasil</button>
+          <button class="danger-btn" id="deleteResult" type="button">⌫ Hapus foto & hasil</button>
         </div>
       </div>
     </div>
@@ -190,6 +194,8 @@ let pendingNonce = null;
 let responseTimer = null;
 let deferredInstallPrompt = null;
 let lastShareText = '';
+let lastRecord = null;
+let pendingDeleteToken = null;
 
 endpoint.value = localStorage.getItem('hka_gas_url') || '';
 updateConnectionBadge();
@@ -352,14 +358,56 @@ window.addEventListener('message', (event) => {
   const data = event.data;
   if (!data || data.type !== 'hka-gemini-result' || String(data.nonce) !== String(pendingNonce)) return;
   if (responseTimer) clearTimeout(responseTimer);
+
+  if (data.action === 'deleteRecord') {
+    const deletedToken = data.deleteToken || pendingDeleteToken;
+    if (data.ok && deletedToken) {
+      const remaining = readLocalLog().filter(entry => entry.deleteToken !== deletedToken);
+      localStorage.setItem('hka_pro_log', JSON.stringify(remaining));
+      if (lastRecord && lastRecord.deleteToken === deletedToken) {
+        lastRecord = null;
+        lastShareText = '';
+        $('resultBody').style.display = 'none';
+        $('resultEmpty').style.display = 'grid';
+        $('resultEmpty').innerHTML = '<div><div class="empty-orbit">🗑️</div><strong>Foto dan hasil sudah dihapus</strong><p>Anda dapat mengunggah foto makanan lain untuk analisis baru.</p></div>';
+      }
+      refreshDashboard();
+    }
+    const deleteButton = $('deleteResult');
+    if (deleteButton) {
+      deleteButton.disabled = false;
+      deleteButton.textContent = '⌫ Hapus foto & hasil';
+    }
+    pendingDeleteToken = null;
+    setStatus(data.message || 'Proses penghapusan selesai.', data.ok ? 'success' : 'error');
+    return;
+  }
+
   setBusy(false);
   setStatus(data.message || 'Proses selesai.', data.ok ? 'success' : 'error');
   if (!data.ok) {
     if (data.driveUrl) $('driveLink').href = data.driveUrl;
+    if (data.deleteToken) {
+      lastRecord = { deleteToken: data.deleteToken, fileName: data.fileName || 'Foto makanan', driveUrl: data.driveUrl || '' };
+      setStatus('Analisis gagal, tetapi foto sudah tersimpan. Foto tersebut tetap dapat dihapus melalui tombol hapus.', 'error');
+      $('resultEmpty').style.display = 'none';
+      $('resultBody').style.display = 'block';
+      $('resultCalories').innerHTML = '— <span>kkal</span>';
+      $('resultConfidence').textContent = 'Analisis belum berhasil';
+      $('resultMetrics').innerHTML = '';
+      $('foodList').textContent = 'Foto tersimpan di Google Drive, tetapi belum ada estimasi nutrisi.';
+      $('aiNotes').textContent = data.message || '';
+      $('deleteResult').style.display = 'flex';
+    }
     return;
   }
+  lastRecord = {
+    deleteToken: data.deleteToken || '',
+    fileName: data.fileName || 'Foto makanan',
+    driveUrl: data.driveUrl || ''
+  };
   renderResult(data.result || {}, data.driveUrl || '');
-  saveLocalEntry(data.result || {}, data.fileName || 'Foto makanan');
+  saveLocalEntry(data.result || {}, data.fileName || 'Foto makanan', lastRecord);
 });
 
 function renderResult(result, driveUrl) {
@@ -404,9 +452,15 @@ function escapeHtml(value) {
 function readLocalLog() {
   try { return JSON.parse(localStorage.getItem('hka_pro_log') || '[]'); } catch (e) { return []; }
 }
-function saveLocalEntry(result, fileName) {
+function saveLocalEntry(result, fileName, record) {
   const log = readLocalLog();
-  log.unshift({ date: new Date().toISOString(), name: fileName, total: result.total || {} });
+  log.unshift({
+    date: new Date().toISOString(),
+    name: fileName,
+    total: result.total || {},
+    deleteToken: record && record.deleteToken ? record.deleteToken : '',
+    driveUrl: record && record.driveUrl ? record.driveUrl : ''
+  });
   localStorage.setItem('hka_pro_log', JSON.stringify(log.slice(0, 80)));
   refreshDashboard();
 }
@@ -439,9 +493,49 @@ function refreshDashboard() {
   const log = readLocalLog().slice(0, 5);
   $('historyList').innerHTML = log.length ? log.map(entry => {
     const time = new Date(entry.date).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    return '<div class="history-row"><div><strong>' + escapeHtml(entry.name) + '</strong><small>' + time + '</small></div><span class="history-cal">' + formatNumber(entry.total && entry.total.calories_kcal) + ' kkal</span></div>';
+    const removeButton = entry.deleteToken
+      ? '<button class="history-delete" type="button" data-delete-token="' + escapeHtml(entry.deleteToken) + '">Hapus</button>'
+      : '<span class="muted" style="font-size:9px">Hapus manual di Drive</span>';
+    return '<div class="history-row"><div style="min-width:0"><strong>' + escapeHtml(entry.name) + '</strong><small>' + time + '</small></div><span class="history-cal">' + formatNumber(entry.total && entry.total.calories_kcal) + ' kkal</span>' + removeButton + '</div>';
   }).join('') : '<div class="muted" style="font-size:12px">Belum ada aktivitas pada perangkat ini.</div>';
 }
+
+function requestDeleteRecord(token, button) {
+  if (!token) {
+    setStatus('Kode penghapusan tidak tersedia untuk catatan ini.', 'error');
+    return;
+  }
+  const confirmed = window.confirm('Hapus foto ini dari Google Drive dan hapus hasil analisisnya dari Google Sheets? Foto akan dipindahkan ke Sampah Google Drive.');
+  if (!confirmed) return;
+
+  pendingDeleteToken = token;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Menghapus…';
+  }
+  const mainDeleteButton = $('deleteResult');
+  if (lastRecord && lastRecord.deleteToken === token && mainDeleteButton) {
+    mainDeleteButton.disabled = true;
+    mainDeleteButton.textContent = 'Menghapus…';
+  }
+  setStatus('Menghapus foto dari Drive dan catatan dari Sheets…', 'normal', true);
+  submitToAppsScript({ action: 'deleteRecord', deleteToken: token });
+}
+
+$('deleteResult').addEventListener('click', () => {
+  if (!lastRecord || !lastRecord.deleteToken) {
+    setStatus('Token hapus tidak tersedia. Analisis ulang foto untuk membuat kontrol penghapusan.', 'error');
+    return;
+  }
+  requestDeleteRecord(lastRecord.deleteToken, $('deleteResult'));
+});
+
+$('historyList').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-delete-token]');
+  if (!button) return;
+  requestDeleteRecord(button.dataset.deleteToken, button);
+});
+
 $('editTarget').addEventListener('click', () => {
   const existing = localStorage.getItem('hka_pro_goal') || '';
   const answer = window.prompt('Masukkan target kalori harian Anda (kkal). Kosongkan untuk menghapus target.', existing);
